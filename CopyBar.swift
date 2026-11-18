@@ -24,6 +24,13 @@ import Darwin
 import ServiceManagement
 import UserNotifications
 
+// MARK: - Langue
+
+/// Textes de l'interface : en français si c'est la langue du Mac, en anglais sinon.
+/// (Le journal, lui, reste en français.)
+let french = Locale.preferredLanguages.first?.hasPrefix("fr") ?? false
+func L(_ fr: String, _ en: String) -> String { french ? fr : en }
+
 // MARK: - Journal (~/Library/Logs/CopyBar.log)
 
 func log(_ format: String, _ args: CVarArg...) {
@@ -833,7 +840,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     private static func percent(_ fraction: Double?) -> String {
         guard let fraction else { return "…" }
-        return "\(Int((fraction * 100).rounded(.down))) %"
+        let value = Int((fraction * 100).rounded(.down))
+        return L("\(value) %", "\(value)%")
     }
 
     private func render() {
@@ -852,7 +860,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             let mean = known.isEmpty ? nil : known.reduce(0, +) / Double(known.count)
             button.title = " " + Self.percent(mean) + (copies.count > 1 ? " (\(copies.count))" : "")
         }
-        button.toolTip = copies.isEmpty ? "CopyBar — aucune copie en cours" : copies.map(\.row.title).joined(separator: "\n")
+        button.toolTip = copies.isEmpty ? L("CopyBar — aucune copie en cours", "CopyBar — no copy in progress") : copies.map(\.row.title).joined(separator: "\n")
 
         // On ne reconstruit le menu que si sa structure change, pour qu'il reste utilisable
         // (surbrillance conservée) pendant qu'il est ouvert et que les pourcentages défilent.
@@ -863,7 +871,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
         for (items, copy) in zip(copyItems, copies) {
             items.title.title = "\(Self.percent(copy.row.fraction)) — \(copy.row.title)"
-            items.detail.title = copy.row.detail.isEmpty ? "Préparation…" : copy.row.detail
+            items.detail.title = copy.row.detail.isEmpty ? L("Préparation…", "Preparing…") : copy.row.detail
         }
     }
 
@@ -878,13 +886,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         copyItems = []
 
         if !trusted {
-            add("Autoriser l’accès Accessibilité…", #selector(promptForAccessibility))
-            let hint = add("Nécessaire pour lire la progression du Finder", nil)
+            add(L("Autoriser l’accès Accessibilité…", "Grant Accessibility Access…"), #selector(promptForAccessibility))
+            let hint = add(L("Nécessaire pour lire la progression du Finder", "Required to read Finder’s progress"), nil)
             hint.isEnabled = false
         } else if copies.isEmpty {
-            add("Aucune copie en cours", nil).isEnabled = false
+            add(L("Aucune copie en cours", "No copy in progress"), nil).isEnabled = false
         } else {
-            add(copies.count == 1 ? "1 copie en cours" : "\(copies.count) copies en cours", nil).isEnabled = false
+            add(copies.count == 1 ? L("1 copie en cours", "1 copy in progress") : L("\(copies.count) copies en cours", "\(copies.count) copies in progress"), nil).isEnabled = false
             for _ in copies {
                 let title = add("", #selector(raiseProgressWindow))
                 let detail = add("", nil)
@@ -896,17 +904,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         if notifications != .authorized && notifications != .provisional {
             menu.addItem(.separator())
-            add("Activer les notifications…", #selector(enableNotifications))
+            add(L("Activer les notifications…", "Enable Notifications…"), #selector(enableNotifications))
         }
 
         menu.addItem(.separator())
-        add("Afficher la fenêtre de progression", #selector(raiseProgressWindow)).isEnabled = progressWindow != nil
-        let past = add("Historique", nil)
+        add(L("Afficher la fenêtre de progression", "Show Progress Window"), #selector(raiseProgressWindow)).isEnabled = progressWindow != nil
+        let past = add(L("Historique", "History"), nil)
         past.isEnabled = true
         past.submenu = historyMenu()
         menu.addItem(.separator())
-        add("Lancer au login", #selector(toggleLoginItem)).state = SMAppService.mainApp.status == .enabled ? .on : .off
-        add("Quitter CopyBar", #selector(NSApplication.terminate(_:)), key: "q").target = NSApp
+        add(L("Lancer au login", "Launch at Login"), #selector(toggleLoginItem)).state = SMAppService.mainApp.status == .enabled ? .on : .off
+        add(L("Quitter CopyBar", "Quit CopyBar"), #selector(NSApplication.terminate(_:)), key: "q").target = NSApp
     }
 
     @discardableResult
@@ -924,7 +932,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private func historyMenu() -> NSMenu {
         let list = NSMenu()
         list.autoenablesItems = false
-        if history.entries.isEmpty { add("Aucune copie enregistrée", nil, to: list) }
+        if history.entries.isEmpty { add(L("Aucune copie enregistrée", "No copies recorded"), nil, to: list) }
         for entry in history.entries {
             let item = add(Self.when(entry.ended) + "  " + Self.summary(entry), nil, to: list)
             item.isEnabled = true
@@ -933,7 +941,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             item.submenu = detailMenu(entry)
         }
         list.addItem(.separator())
-        add("Effacer l’historique", #selector(clearHistory), to: list).isEnabled = !history.entries.isEmpty
+        add(L("Effacer l’historique", "Clear History"), #selector(clearHistory), to: list).isEnabled = !history.entries.isEmpty
         return list
     }
 
@@ -942,39 +950,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         detail.autoenablesItems = false
         add(entry.title, nil, to: detail)
         if entry.items.count == 1 {
-            add("Élément : " + entry.items[0].name, nil, to: detail)
+            add(L("Élément : ", "Item: ") + entry.items[0].name, nil, to: detail)
         } else if entry.items.count > 1 {
-            add("\(entry.items.count) éléments identifiés :", nil, to: detail)
+            add(L("\(entry.items.count) éléments identifiés :", "\(entry.items.count) items identified:"), nil, to: detail)
             for item in entry.items.prefix(8) { add(item.name, nil, to: detail).indentationLevel = 1 }
-            if entry.items.count > 8 { add("… et \(entry.items.count - 8) autres", nil, to: detail).indentationLevel = 1 }
+            if entry.items.count > 8 { add(L("… et \(entry.items.count - 8) autres", "… and \(entry.items.count - 8) more"), nil, to: detail).indentationLevel = 1 }
         }
         if let source = entry.source {
-            add((entry.moved ? "Déplacé de : " : "De : ") + Self.short(source), #selector(openSource(_:)), to: detail, entry: entry)
+            add((entry.moved ? L("Déplacé de : ", "Moved from: ") : L("De : ", "From: ")) + Self.short(source), #selector(openSource(_:)), to: detail, entry: entry)
         } else {
-            add("De : provenance non identifiée", nil, to: detail)
+            add(L("De : provenance non identifiée", "From: source not identified"), nil, to: detail)
         }
         if let destination = entry.destination {
-            add("Vers : " + Self.short(destination), #selector(openDestination(_:)), to: detail, entry: entry)
+            add(L("Vers : ", "To: ") + Self.short(destination), #selector(openDestination(_:)), to: detail, entry: entry)
         } else {
-            add("Vers : destination non identifiée", nil, to: detail)
+            add(L("Vers : destination non identifiée", "To: destination not identified"), nil, to: detail)
         }
         add(Self.stats(entry), nil, to: detail)
         add(Self.status(entry), nil, to: detail)
         detail.addItem(.separator())
-        add("Afficher dans le Finder", #selector(reveal(_:)), to: detail, entry: entry).isEnabled = !entry.items.isEmpty && entry.undone == nil
+        add(L("Afficher dans le Finder", "Show in Finder"), #selector(reveal(_:)), to: detail, entry: entry).isEnabled = !entry.items.isEmpty && entry.undone == nil
         if entry.undone == nil, !entry.canUndo {
-            add("Marche arrière indisponible : provenance non vérifiée", nil, to: detail)
+            add(L("Marche arrière indisponible : provenance non vérifiée", "Undo unavailable: source not verified"), nil, to: detail)
         } else {
-            add(entry.moved ? "Faire marche arrière (remettre à sa place)…" : "Faire marche arrière (corbeille)…", #selector(undo(_:)), to: detail, entry: entry)
+            add(entry.moved ? L("Faire marche arrière (remettre à sa place)…", "Undo (Put Back)…") : L("Faire marche arrière (corbeille)…", "Undo (Move Copy to Trash)…"), #selector(undo(_:)), to: detail, entry: entry)
                 .isEnabled = entry.canUndo
         }
-        add("Retirer de l’historique", #selector(forget(_:)), to: detail, entry: entry)
+        add(L("Retirer de l’historique", "Remove from History"), #selector(forget(_:)), to: detail, entry: entry)
         return detail
     }
 
     private static func when(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = Calendar.current.isDateInToday(date) ? "HH:mm" : "dd/MM HH:mm"
+        formatter.setLocalizedDateFormatFromTemplate(Calendar.current.isDateInToday(date) ? "jm" : "dMjm")
         return formatter.string(from: date)
     }
 
@@ -984,7 +992,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     private static func summary(_ entry: Entry) -> String {
         guard let destination = entry.destination, !entry.items.isEmpty else { return entry.title }
-        let what = entry.items.count == 1 ? entry.items[0].name : "\(entry.items.count) éléments"
+        let what = entry.items.count == 1 ? entry.items[0].name : L("\(entry.items.count) éléments", "\(entry.items.count) items")
         return "\(what) → \(FileManager.default.displayName(atPath: destination))"
     }
 
@@ -999,7 +1007,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         var parts: [String] = []
         if let bytes = entry.bytes, let files = entry.files {
             parts.append(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file))
-            parts.append(files == 1 ? "1 fichier" : "\(files) fichiers")
+            parts.append(files == 1 ? L("1 fichier", "1 file") : L("\(files) fichiers", "\(files) files"))
             let seconds = entry.ended.timeIntervalSince(entry.started)
             if entry.outcome == .done, seconds >= 1 {
                 parts.append(ByteCountFormatter.string(fromByteCount: Int64(Double(bytes) / seconds), countStyle: .file) + "/s")
@@ -1015,11 +1023,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
-        if let undone = entry.undone { return "Marche arrière faite le " + formatter.string(from: undone) }
+        if let undone = entry.undone { return L("Marche arrière faite le ", "Undone on ") + formatter.string(from: undone) }
         switch entry.outcome {
-        case .done: return "Terminée le " + formatter.string(from: entry.ended)
-        case .interrupted: return "Interrompue vers \(percent(entry.fraction)) le " + formatter.string(from: entry.ended)
-        case .unknown: return "Fin non observée, issue non vérifiable"
+        case .done: return L("Terminée le ", "Finished on ") + formatter.string(from: entry.ended)
+        case .interrupted: return L("Interrompue vers \(percent(entry.fraction)) le ", "Interrupted at about \(percent(entry.fraction)) on ") + formatter.string(from: entry.ended)
+        case .unknown: return L("Fin non observée, issue non vérifiable", "End not observed, outcome unknown")
         }
     }
 
@@ -1060,7 +1068,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         alert.informativeText = text
         if let confirm {
             alert.addButton(withTitle: confirm)
-            alert.addButton(withTitle: "Annuler")
+            alert.addButton(withTitle: L("Annuler", "Cancel"))
         }
         return alert.runModal() == .alertFirstButtonReturn && confirm != nil
     }
@@ -1070,31 +1078,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     @objc private func undo(_ sender: NSMenuItem) {
         guard let entry = entry(sender), entry.canUndo, let destination = entry.destination else { return }
         let names = entry.items.prefix(10).map { "• " + $0.name }.joined(separator: "\n")
-            + (entry.items.count > 10 ? "\n… et \(entry.items.count - 10) autres" : "")
-        let count = entry.items.count == 1 ? "L’élément suivant sera" : "Les \(entry.items.count) éléments suivants seront"
+            + (entry.items.count > 10 ? L("\n… et \(entry.items.count - 10) autres", "\n… and \(entry.items.count - 10) more") : "")
         let text: String
         if entry.moved {
-            text = "\(count) remis dans « \(Self.short(entry.source ?? "leur dossier d’origine")) » :\n\(names)"
+            let origin = entry.source.map(Self.short) ?? L("leur dossier d’origine", "their original folder")
+            text = entry.items.count == 1
+                ? L("L’élément suivant sera remis dans « \(origin) » :\n\(names)", "The following item will be put back in “\(origin)”:\n\(names)")
+                : L("Les \(entry.items.count) éléments suivants seront remis dans « \(origin) » :\n\(names)", "The following \(entry.items.count) items will be put back in “\(origin)”:\n\(names)")
         } else {
-            text = "\(count) mis à la corbeille depuis « \(Self.short(destination)) » :\n\(names)\n\n"
-                + "Les originaux\(entry.source.map { " dans « \(Self.short($0)) »" } ?? "") ne sont pas touchés."
+            let from = Self.short(destination)
+            let what = entry.items.count == 1
+                ? L("L’élément suivant sera mis à la corbeille depuis « \(from) » :", "The following item will be moved to the Trash from “\(from)”:")
+                : L("Les \(entry.items.count) éléments suivants seront mis à la corbeille depuis « \(from) » :", "The following \(entry.items.count) items will be moved to the Trash from “\(from)”:")
+            let originals = entry.source.map(Self.short).map { L("Les originaux dans « \($0) » ne sont pas touchés.", "The originals in “\($0)” are left untouched.") }
+                ?? L("Les originaux ne sont pas touchés.", "The originals are left untouched.")
+            text = "\(what)\n\(names)\n\n\(originals)"
         }
-        guard ask("Faire marche arrière ?", text, confirm: entry.moved ? "Remettre à sa place" : "Mettre à la corbeille") else { return }
+        guard ask(L("Faire marche arrière ?", "Undo this operation?"), text, confirm: entry.moved ? L("Remettre à sa place", "Put Back") : L("Mettre à la corbeille", "Move to Trash")) else { return }
 
         fileQueue.async { [weak self] in
             let fm = FileManager.default
             var done = 0, problems: [String] = [], untrashable: [Entry.Item] = []
             for item in entry.items {
                 let path = entry.path(of: item)
-                guard let inode = Entry.inode(path) else { problems.append("\(item.name) : introuvable"); continue }
-                guard inode == item.inode else { problems.append("\(item.name) : a été remplacé depuis la copie, laissé en place"); continue }
+                guard let inode = Entry.inode(path) else { problems.append(L("\(item.name) : introuvable", "\(item.name): not found")); continue }
+                guard inode == item.inode else { problems.append(L("\(item.name) : a été remplacé depuis la copie, laissé en place", "\(item.name): replaced since the copy, left in place")); continue }
                 guard let source = item.source else { continue }
                 do {
                     if entry.moved {
-                        guard !fm.fileExists(atPath: source) else { problems.append("\(item.name) : un élément du même nom existe déjà à l’origine"); continue }
+                        guard !fm.fileExists(atPath: source) else { problems.append(L("\(item.name) : un élément du même nom existe déjà à l’origine", "\(item.name): an item with the same name already exists at the original location")); continue }
                         try fm.moveItem(atPath: path, toPath: source)
                     } else {
-                        guard fm.fileExists(atPath: source) else { problems.append("\(item.name) : l’original est introuvable, copie laissée en place"); continue }
+                        guard fm.fileExists(atPath: source) else { problems.append(L("\(item.name) : l’original est introuvable, copie laissée en place", "\(item.name): original not found, copy left in place")); continue }
                         try fm.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: nil)
                     }
                     done += 1
@@ -1106,9 +1121,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             }
             DispatchQueue.main.async {
                 guard let self else { return }
-                if !untrashable.isEmpty, self.ask("Pas de corbeille sur ce volume",
-                        "\(untrashable.count) élément(s) de « \(Self.short(destination)) » ne peuvent pas aller à la corbeille. Les supprimer définitivement ?\n"
-                        + untrashable.prefix(10).map { "• " + $0.name }.joined(separator: "\n"), confirm: "Supprimer définitivement") {
+                if !untrashable.isEmpty, self.ask(L("Pas de corbeille sur ce volume", "This volume has no Trash"),
+                        L("\(untrashable.count) élément(s) de « \(Self.short(destination)) » ne peuvent pas aller à la corbeille. Les supprimer définitivement ?\n",
+                          "\(untrashable.count) item(s) in “\(Self.short(destination))” cannot be moved to the Trash. Delete them permanently?\n")
+                        + untrashable.prefix(10).map { "• " + $0.name }.joined(separator: "\n"), confirm: L("Supprimer définitivement", "Delete Permanently")) {
                     for item in untrashable {
                         let path = entry.path(of: item)
                         do {
@@ -1122,7 +1138,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 if done > 0 { self.history.update(entry.id) { $0.undone = Date() } }
                 self.render()
                 if !problems.isEmpty {
-                    _ = self.ask(done > 0 ? "Marche arrière partielle" : "Marche arrière impossible", problems.joined(separator: "\n"), confirm: nil)
+                    _ = self.ask(done > 0 ? L("Marche arrière partielle", "Undo partially done") : L("Marche arrière impossible", "Undo failed"), problems.joined(separator: "\n"), confirm: nil)
                 }
             }
         }
@@ -1195,16 +1211,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         switch entry.outcome {
         case .done:
             state = "terminé"
-            content.title = entry.moved ? "Déplacement terminé" : "Copie terminée"
-            content.body = "\(entry.title)\nDurée : \(Self.duration(entry))"
+            content.title = entry.moved ? L("Déplacement terminé", "Move finished") : L("Copie terminée", "Copy finished")
+            content.body = entry.title + "\n" + L("Durée : ", "Duration: ") + Self.duration(entry)
         case .interrupted:
             state = "interrompu"
-            content.title = "Copie interrompue"
-            content.body = "\(entry.title)\nArrêtée vers \(Self.percent(entry.fraction)) après \(Self.duration(entry))"
+            content.title = L("Copie interrompue", "Copy interrupted")
+            content.body = entry.title + "\n" + L("Arrêtée vers \(Self.percent(entry.fraction)) après \(Self.duration(entry))", "Stopped at about \(Self.percent(entry.fraction)) after \(Self.duration(entry))")
         case .unknown:
             state = "fin non observée"
-            content.title = "Copie sortie des relevés"
-            content.body = "\(entry.title)\nDernier relevé : \(Self.percent(entry.fraction)). Issue non vérifiable."
+            content.title = L("Copie sortie des relevés", "Copy lost from view")
+            content.body = entry.title + "\n" + L("Dernier relevé : \(Self.percent(entry.fraction)). Issue non vérifiable.", "Last reading: \(Self.percent(entry.fraction)). Outcome unknown.")
         }
         content.sound = .default
         log("CopyBar: %@ — %@ (%@, dernier relevé %@)", state, entry.title, Self.duration(entry), Self.percent(entry.fraction))

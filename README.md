@@ -7,7 +7,8 @@ progress in the menu bar, notifies you when a copy ends, and keeps a history of 
 that you can undo.
 
 > **Status: early.** Built and tested on macOS 27 (Apple Silicon) with Finder in French.
-> The menus are in French only for now. No signed download yet: you build it yourself.
+> The interface is in English, or French on a Mac set to French. No signed download yet:
+> you build it yourself.
 
 ## Features
 

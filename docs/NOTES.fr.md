@@ -320,7 +320,8 @@ déplacer, relancer, recocher. Puis réaccorder l'Accessibilité si le binaire a
    qu'Apple peut changer à chaque version. À prévoir : test de la structure au démarrage
    avec un message clair si elle n'est plus reconnue, et essais sur chaque macOS visé.
 6. **Écran d'accueil** expliquant les deux autorisations, plutôt que les seules entrées de menu.
-7. **Localisation** des textes de l'app (tout est en français, en dur).
+7. ~~Localisation~~ : fait le 18/11/2026. Interface en français si c'est la langue du Mac, en
+   anglais sinon (fonction `L(fr, en)` dans le code, pas de fichiers `.lproj`). Le journal reste en français.
 
 **Améliorations possibles du fonctionnement :**
 
