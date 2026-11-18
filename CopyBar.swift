@@ -982,7 +982,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         if entry.undone == nil, !entry.canUndo {
             add(L("Marche arrière indisponible : provenance non vérifiée", "Undo unavailable: source not verified"), nil, to: detail)
         } else {
-            add(entry.moved ? L("Faire marche arrière (remettre à sa place)…", "Undo (Put Back)…") : L("Faire marche arrière (corbeille)…", "Undo (Move Copy to Trash)…"), #selector(undo(_:)), to: detail, entry: entry)
+            add(L("Faire marche arrière…", "Undo…"), #selector(undo(_:)), to: detail, entry: entry)
                 .isEnabled = entry.canUndo
         }
         add(L("Retirer de l’historique", "Remove from History"), #selector(forget(_:)), to: detail, entry: entry)
