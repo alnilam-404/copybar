@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-VERSION=1.1.0
+VERSION=1.1.1
 BUNDLE_ID=io.github.alnilam-404.copybar
 IDENTITY="${COPYBAR_SIGN_IDENTITY:--}"
 KEEP_TCC=0; UNIVERSAL=0

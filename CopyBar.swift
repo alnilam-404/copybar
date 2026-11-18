@@ -548,8 +548,15 @@ struct Entry: Codable {
         var unfinished = false
         for name in origin.items.keys.sorted() {
             guard let copied = Info((origin.dir as NSString).appendingPathComponent(name)) else { continue }   // retiré par le Finder (annulation)
-            if OriginProbe.isBusy(copied.created) { unfinished = true }
             let candidates = origin.items[name] ?? []
+            if OriginProbe.isBusy(copied.created) {
+                // Encore marqué « en cours » après la fin. Sans source connue, c'est le reste d'une
+                // ancienne copie interrompue qui traînait dans le dossier (vu le 18/11/2026 sur
+                // un NAS) : on l'ignore. Avec une source, c'est un élément de cette copie resté
+                // incomplet : on ne le liste pas, et l'issue de la copie est douteuse.
+                if !candidates.isEmpty { unfinished = true }
+                continue
+            }
             let present = candidates.filter { fm.fileExists(atPath: $0) }
             seen.append((name, copied.inode, candidates, present.filter { Info($0).map(copied.isCopy(of:)) ?? false }, candidates.filter { !present.contains($0) }))
         }
@@ -575,7 +582,7 @@ struct Entry: Codable {
         // Le disque en dit plus que la fenêtre du Finder sur l'issue de la copie.
         if outcome != .unknown {
             if unfinished {
-                outcome = .unknown                    // élément encore marqué « en cours » : la ligne a disparu avant la fin
+                if outcome == .done { outcome = .unknown }   // la ligne a disparu avant la fin d'un élément
             } else if seen.isEmpty {
                 outcome = .interrupted                // le Finder a retiré ce qu'il avait commencé à écrire
             } else if moved || items.allSatisfy(\.verified) {
