@@ -5,13 +5,13 @@
 #   ./build.sh --keep-tcc      idem sans toucher aux autorisations
 #   ./build.sh --universal     binaire Apple Silicon + Intel (pour une version publiée)
 #
-# Variables : COPYBAR_SIGN_IDENTITY="Developer ID Application: …" pour une vraie signature
+# Variables : COPYBAR_SIGN_IDENTITY="Developer ID Application" pour une vraie signature
 # (runtime renforcé, horodatage : requis pour la notarisation, voir release.sh).
 set -euo pipefail
 cd "$(dirname "$0")"
 
 VERSION=1.1.0
-BUNDLE_ID=local.copybar
+BUNDLE_ID=io.github.alnilam-404.copybar
 IDENTITY="${COPYBAR_SIGN_IDENTITY:--}"
 KEEP_TCC=0; UNIVERSAL=0
 for arg in "$@"; do
@@ -24,7 +24,7 @@ done
 
 # Le bundle est assemblé et signé dans un dossier temporaire : dans un dossier synchronisé
 # (iCloud…), il reçoit des attributs étendus que codesign refuse.
-OUT="$(pwd)/CopyBar.app"
+OUT="${COPYBAR_OUT:-$(pwd)}/CopyBar.app"      # COPYBAR_OUT : autre dossier de sortie
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 APP="$WORK/CopyBar.app"

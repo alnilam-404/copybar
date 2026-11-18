@@ -24,6 +24,21 @@ Ce dossier est en avance sur `~/bin/CopyBar`. Pour mettre l'app installée à jo
 CopyBar, copier `CopyBar.app` d'ici vers `~/bin/CopyBar/`, relancer, puis réaccorder
 l'Accessibilité (signature ad hoc : voir « Pièges »).
 
+### Depuis le 18/11/2026 : signature et publication
+
+- Identifiant de bundle définitif : `io.github.alnilam-404.copybar` (les mentions de
+  `local.copybar` plus bas décrivent l'état antérieur). L'historique suit l'identifiant :
+  `~/Library/Application Support/io.github.alnilam-404.copybar/history.json`.
+- `./build.sh` reste un build local signé ad hoc. Avec
+  `COPYBAR_SIGN_IDENTITY="Developer ID Application"`, il signe avec le certificat du
+  trousseau (runtime renforcé, horodatage) et l'autorisation Accessibilité survit aux mises à jour.
+- `./release.sh` : build universel signé, notarisation (`notarytool`, profil de trousseau
+  `copybar`), agrafage, zip `CopyBar-<version>.zip`. Exécuté avec succès le 18/11/2026
+  (« Notarized Developer ID »).
+- Le bundle est assemblé et signé dans un dossier temporaire : ce dossier-ci est synchronisé
+  par iCloud, qui ajoute des attributs étendus refusés par `codesign` (« detritus not
+  allowed ») et invalide la vérification stricte de la copie déposée ici.
+
 ## Contenu
 
 ```
