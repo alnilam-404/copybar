@@ -921,6 +921,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         past.submenu = historyMenu()
         menu.addItem(.separator())
         add(L("Lancer au login", "Launch at Login"), #selector(toggleLoginItem)).state = SMAppService.mainApp.status == .enabled ? .on : .off
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        add(L("À propos de CopyBar \(version)", "About CopyBar \(version)"), #selector(showAbout))
         add(L("Quitter CopyBar", "Quit CopyBar"), #selector(NSApplication.terminate(_:)), key: "q").target = NSApp
     }
 
@@ -1156,6 +1158,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     @objc private func raiseProgressWindow() {
         guard let window = progressWindow else { return }
         pollQueue.async { FinderProbe.raise(window) }
+    }
+
+    @objc private func showAbout() {
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.orderFrontStandardAboutPanel(options: [
+            .credits: NSAttributedString(
+                string: L("Suit les copies du Finder depuis la barre de menus.", "Keeps an eye on Finder copies from the menu bar."),
+                attributes: [.font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize), .foregroundColor: NSColor.labelColor]),
+        ])
     }
 
     @objc private func promptForAccessibility() {

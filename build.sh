@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-VERSION=1.1.1
+VERSION=1.1.2
 BUNDLE_ID=io.github.alnilam-404.copybar
 IDENTITY="${COPYBAR_SIGN_IDENTITY:--}"
 KEEP_TCC=0; UNIVERSAL=0
@@ -53,7 +53,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>CFBundleExecutable</key><string>CopyBar</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>$VERSION</string>
-    <key>CFBundleVersion</key><string>1</string>
+    <key>CFBundleVersion</key><string>$VERSION</string>
+    <key>NSHumanReadableCopyright</key><string>© 2026 alnilam-404 — MIT License</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>LSUIElement</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
