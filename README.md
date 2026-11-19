@@ -7,8 +7,7 @@ progress in the menu bar, notifies you when a copy ends, and keeps a history of 
 that you can undo.
 
 > **Status: early.** Built and tested on macOS 27 (Apple Silicon) with Finder in French.
-> The interface is in English, or French on a Mac set to French. No signed download yet:
-> you build it yourself.
+> The interface is in English, or French on a Mac set to French.
 
 ## Features
 
@@ -21,7 +20,22 @@ that you can undo.
 
 ## Install
 
-Requires macOS 13 or later and the Xcode command line tools (`xcode-select --install`).
+Requires macOS 13 or later.
+
+1. Download `CopyBar-x.y.z.zip` from the [latest release](https://github.com/alnilam-404/copybar/releases/latest).
+2. Unzip it and drag `CopyBar.app` to your Applications folder.
+3. Open it. A small icon appears in the menu bar (there is no Dock icon).
+4. Grant **Accessibility** when asked (System Settings › Privacy & Security › Accessibility).
+   Required: this is how CopyBar reads Finder's progress window.
+5. Optional: allow **Notifications**. CopyBar starts at login by default; untick
+   *Launch at Login* in its menu if you prefer not.
+
+The app is signed with a Developer ID and notarized by Apple, so it opens without a
+Gatekeeper warning. To update, replace the app with the newer one; permissions are kept.
+
+### Build from source
+
+Needs the Xcode command line tools (`xcode-select --install`).
 
 ```sh
 git clone https://github.com/alnilam-404/copybar.git
@@ -29,11 +43,6 @@ cd copybar
 ./build.sh
 open CopyBar.app
 ```
-
-On first launch, grant two permissions:
-
-1. **Accessibility** (System Settings › Privacy & Security › Accessibility). Required: this is how CopyBar reads Finder's progress window.
-2. **Notifications**, optional.
 
 A locally built app is ad hoc signed, so macOS asks for Accessibility again after each rebuild.
 
