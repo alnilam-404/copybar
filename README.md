@@ -6,7 +6,9 @@ Finder's copy progress window is easy to lose behind other windows. CopyBar show
 progress in the menu bar, notifies you when a copy ends, and keeps a history of past copies
 that you can undo.
 
-> **Status: early.** Built and tested on macOS 27 (Apple Silicon) with Finder in French.
+<img src="docs/screenshot.png" width="800" alt="CopyBar menu: a copy in progress and the history with its Undo command">
+
+> **Status: early.** Built and tested on macOS 27 (Apple Silicon) with Finder in French and English.
 > The interface is in English, or French on a Mac set to French.
 
 ## Features
@@ -61,7 +63,7 @@ release. Expect breakage; reports are welcome.
 - Copies shorter than 2–3 seconds never show a progress window, so they are not seen.
 - Paths are only found when the destination folder is visible in a Finder window (or is the Desktop, a volume, or a standard home folder).
 - On network volumes, small items of a multi-item copy can be missing from the history entry.
-- Not tested on Intel Macs, other macOS versions, or other Finder languages.
+- Not tested on Intel Macs, other macOS versions, or Finder languages other than English and French.
 - Cannot be distributed on the Mac App Store (it needs to read another app's interface).
 
 ## Development
