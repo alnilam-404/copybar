@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-VERSION=1.1.3
+VERSION=1.1.4
 BUNDLE_ID=io.github.alnilam-404.copybar
 IDENTITY="${COPYBAR_SIGN_IDENTITY:--}"
 KEEP_TCC=0; UNIVERSAL=0
@@ -50,6 +50,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>CFBundleName</key><string>CopyBar</string>
     <key>CFBundleDevelopmentRegion</key><string>fr</string>
     <key>CFBundleAllowMixedLocalizations</key><true/>
+    <key>CFBundleLocalizations</key><array><string>en</string><string>fr</string></array>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleExecutable</key><string>CopyBar</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>$VERSION</string>
@@ -61,6 +63,13 @@ cat > "$APP/Contents/Info.plist" <<EOF
 </dict>
 </plist>
 EOF
+
+# Icône, et dossiers de langue vides : ils suffisent pour que l'app apparaisse dans
+# Réglages Système › Langue et région › Applications (les textes sont dans le code, cf. L()).
+mkdir -p "$APP/Contents/Resources/en.lproj" "$APP/Contents/Resources/fr.lproj"
+cp assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+touch "$APP/Contents/Resources/en.lproj/Localizable.strings" "$APP/Contents/Resources/fr.lproj/Localizable.strings"
+xattr -cr "$APP"
 
 if [ "$IDENTITY" = "-" ]; then
     codesign --force --sign - --identifier "$BUNDLE_ID" "$APP"

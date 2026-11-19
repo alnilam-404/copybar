@@ -1,3 +1,5 @@
+<img src="assets/icon-256.png" width="128" alt="CopyBar icon">
+
 # CopyBar
 
 A tiny macOS menu bar app that keeps an eye on Finder copies.
@@ -9,7 +11,8 @@ that you can undo.
 <img src="docs/screenshot.png" width="800" alt="CopyBar menu: a copy in progress and the history with its Undo command">
 
 > **Status: early.** Built and tested on macOS 27 (Apple Silicon) with Finder in French and English.
-> The interface is in English, or French on a Mac set to French.
+> The interface is in English or French: it follows the Mac's language, and can be set per app
+> in System Settings › General › Language & Region › Applications.
 
 ## Features
 
